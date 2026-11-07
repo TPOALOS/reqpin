@@ -11,6 +11,8 @@ One file, standard library only.
 python3 reqpin.py                          # ./requirements.txt
 python3 reqpin.py requirements.txt dev-requirements.txt --min-severity MEDIUM
 python3 reqpin.py requirements.txt --allow my-custom-lib
+python3 reqpin.py --format json                 # or --format sarif
+# or: pip install git+https://github.com/TPOALOS/reqpin && reqpin
 ```
 
 Example output:
@@ -39,11 +41,27 @@ LOW    missing-hashes       requirements.txt: 12 pinned requirement(s) have no -
 
 Exit codes: `0` clean, `1` findings, `2` unreadable file.
 
+### Included files
+
+`-r base.txt` lines are followed, so `requirements.txt` that pulls in `base.txt` and `dev.txt` audits all three,
+and each finding names the file it came from. Includes must stay inside the directory of the file you passed
+(symlinks pointing outside are refused), remote includes are never fetched, and include cycles are safe.
+Use `--no-follow` to audit only the files you name.
+
+### Silencing a finding you accept
+
+```
+internal-lib  # reqpin: ignore[unpinned-version]
+# reqpin: ignore-file[missing-hashes]      (silences a rule for the whole file; no list = everything)
+```
+
+The comment goes on the first line of the requirement.
+
 ## Limits
 
 - The typosquat check only compares against a small built-in list and is a hint, not a verdict.
   Real packages can sit one edit from a popular name; use `--allow NAME` for those.
-- It does not query PyPI or vulnerability databases and does not follow `-r` includes.
+- It does not query PyPI or vulnerability databases. `-c` constraint files are not followed.
 - Environment markers are ignored; `pyproject.toml` and `Pipfile` are not parsed.
 
 ## Tests
